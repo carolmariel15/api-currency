@@ -1,6 +1,7 @@
 package com.nttdata.api.currency.handler;
 
 import com.nttdata.api.currency.document.Currency;
+import com.nttdata.api.currency.producer.KafkaJsonProducer;
 import com.nttdata.api.currency.repository.CurrecyRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,9 +17,12 @@ public class CurrencyHandler {
 
     private final CurrecyRepository currencyRepository;
 
+    private final KafkaJsonProducer kafkaJsonProducer;
+
     static Mono<ServerResponse> notFound = ServerResponse.notFound().build();
 
     public Mono<ServerResponse> getAllCurrency(ServerRequest serverRequest) {
+        currencyRepository.findAll().log().collectList().subscribe(kafkaJsonProducer::sendCurrency);
         return  ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(currencyRepository.findAll().log(), Currency.class);
