@@ -22,7 +22,6 @@ public class CurrencyHandler {
     static Mono<ServerResponse> notFound = ServerResponse.notFound().build();
 
     public Mono<ServerResponse> getAllCurrency(ServerRequest serverRequest) {
-        currencyRepository.findAll().log().collectList().subscribe(kafkaJsonProducer::sendCurrency);
         return  ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(currencyRepository.findAll().log(), Currency.class);
@@ -31,10 +30,13 @@ public class CurrencyHandler {
     public Mono<ServerResponse> getCurrency(ServerRequest serverRequest) {
         var id = Integer.parseInt(serverRequest.pathVariable("id"));
         var currency = currencyRepository.findById(id);
-        return currency.flatMap(i -> ServerResponse.ok()
-                    .contentType(MediaType.TEXT_EVENT_STREAM)
-                    .body(currency, Currency.class))
-                .switchIfEmpty(notFound);
+
+        return currency.flatMap(i -> {
+            kafkaJsonProducer.sendCurrency(i);
+            return ServerResponse.ok()
+                            .contentType(MediaType.TEXT_EVENT_STREAM)
+                            .body(currency, Currency.class);
+        }).switchIfEmpty(notFound);
     }
 
     public Mono<ServerResponse> create(ServerRequest serverRequest) {
@@ -45,14 +47,19 @@ public class CurrencyHandler {
     }
 
     public Mono<ServerResponse> edit(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(Currency.class).flatMap(v -> {
+        var itemEdit = serverRequest.bodyToMono(Currency.class);
+        return itemEdit.filter(i -> i.getId()==4).flatMap(v -> {
             return currencyRepository.findById(v.getId()).flatMap(c -> {
                 c.setDescription(v.getDescription());
+                c.setBuyingRate(v.getBuyingRate());
+                c.setSellingRate(v.getSellingRate());
                 return ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.TEXT_EVENT_STREAM)
                         .body(currencyRepository.save(c), Currency.class);
             }).switchIfEmpty(notFound);
-        });
+        }).switchIfEmpty(ServerResponse.status(HttpStatus.OK)
+                .contentType(MediaType.valueOf(MediaType.TEXT_EVENT_STREAM_VALUE))
+                .bodyValue("No se puede editar la tasa de compra y/o venta."));
     }
 
     public Mono<ServerResponse> delete(ServerRequest serverRequest) {

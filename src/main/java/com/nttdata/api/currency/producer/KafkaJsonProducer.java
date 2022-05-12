@@ -14,13 +14,13 @@ public class KafkaJsonProducer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaJsonProducer.class);
 
-    private final KafkaTemplate<String, List<Currency>> kafkaTemplate;
+    private final KafkaTemplate<String, Currency> kafkaTemplate;
 
-    public KafkaJsonProducer(@Qualifier("kafkaJsonTemplate") KafkaTemplate<String, List<Currency>> kafkaTemplate) {
+    public KafkaJsonProducer(@Qualifier("kafkaJsonTemplate") KafkaTemplate<String, Currency> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendCurrency(List<Currency> c) {
+    public void sendCurrency(Currency c) {
         LOGGER.info("Enviando moneda", c);
         this.kafkaTemplate.send("topic-currency", c);
     }

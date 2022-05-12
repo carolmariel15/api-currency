@@ -11,13 +11,12 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Configuration
 public class KafkaJsonConfig {
 
-    public ProducerFactory<String, List<Currency>> producerFactory() {
+    public ProducerFactory<String, Currency> producerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -27,7 +26,7 @@ public class KafkaJsonConfig {
     }
 
     @Bean(name = "kafkaJsonTemplate")
-    public KafkaTemplate<String, List<Currency>> kafkaTemplate() {
+    public KafkaTemplate<String, Currency> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
