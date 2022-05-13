@@ -14,7 +14,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 public class CurrencyRouter {
 
     @Bean
-    public RouterFunction<ServerResponse> clientRouterFunc(CurrencyHandler currencyHandler) {
+    public RouterFunction<ServerResponse> currencyRouterFunc(CurrencyHandler currencyHandler) {
         return RouterFunctions.route(GET("/currency").and(accept(MediaType.TEXT_EVENT_STREAM)), currencyHandler::getAllCurrency)
                 .andRoute(GET("/currency/{id}").and(accept(MediaType.TEXT_EVENT_STREAM)), currencyHandler::getCurrency)
                 .andRoute(POST("/currency").and(accept(MediaType.TEXT_EVENT_STREAM)), currencyHandler::create)
